@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ATS Inspect">
+<title>Transfer Switch Inspection Form</title>
+<style>
+  :root{
+    --navy:#C2410C; --navy-light:#E07B18; --grey:#6b7280; --line:#e2e5ea;
+    --bg:#f5f6f8; --card:#ffffff; --danger:#c0392b;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:#222; padding-bottom:40px;}
+  header{position:sticky; top:0; z-index:20; background:var(--navy); color:#fff; padding:14px 16px; padding-top:calc(14px + env(safe-area-inset-top)); display:flex; align-items:center; justify-content:space-between;}
+  header h1{font-size:16px; margin:0; font-weight:600;}
+  header button{background:rgba(255,255,255,0.15); border:none; color:#fff; padding:8px 14px; border-radius:8px; font-size:14px; font-weight:600;}
+  main{max-width:720px; margin:0 auto; padding:16px;}
+
+  .report-card{background:var(--card); border-radius:12px; padding:14px 16px; margin-bottom:10px; box-shadow:0 1px 3px rgba(0,0,0,0.08); display:flex; justify-content:space-between; align-items:center;}
+  .report-card .info b{display:block; font-size:15px;}
+  .report-card .info span{font-size:13px; color:var(--grey);}
+  .report-card .actions{display:flex; align-items:center; gap:4px;}
+  .report-card .actions button{border:none; background:none; font-size:20px; padding:6px 8px; color:var(--grey);}
+  .empty-state{text-align:center; color:var(--grey); padding:60px 20px; font-size:15px;}
+
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-size:11px; font-weight:600; color:var(--grey); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:4px;}
+  .field input[type=text], .field input[type=date], .field textarea, .field select{
+    width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:15px; background:#fff; font-family:inherit;
+  }
+  .field textarea{min-height:70px; resize:vertical;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+  .card{background:var(--card); border-radius:12px; padding:16px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+  .card h2{font-size:14px; text-transform:uppercase; letter-spacing:0.04em; color:var(--navy); margin:0 0 14px 0; border-bottom:2px solid var(--navy); padding-bottom:8px;}
+  .card h3{font-size:12px; text-transform:uppercase; letter-spacing:0.03em; color:var(--navy-light); margin:16px 0 8px;}
+  .subnote{font-size:11px; color:var(--grey); margin:-6px 0 12px; font-style:italic;}
+
+  table.gridtable{width:100%; border-collapse:collapse; margin-bottom:6px;}
+  table.gridtable th{font-size:10px; text-transform:uppercase; color:var(--grey); font-weight:600; padding:4px 3px; text-align:center; border-bottom:1px solid var(--line);}
+  table.gridtable td{padding:3px 2px; vertical-align:middle;}
+  table.gridtable td.rowlabel{font-size:12px; font-weight:600; color:#333; padding-right:6px; white-space:nowrap;}
+  table.gridtable input, table.gridtable select{width:100%; padding:7px 4px; border:1px solid var(--line); border-radius:6px; font-size:13px; text-align:center;}
+
+  .pair-row{display:grid; grid-template-columns:1.6fr 1fr 1fr; gap:8px; align-items:center; margin-bottom:8px;}
+  .pair-row .lbl{font-size:12.5px; font-weight:600; color:#333;}
+  .pair-row input{width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; font-size:13px;}
+  .pair-head{display:grid; grid-template-columns:1.6fr 1fr 1fr; gap:8px; margin-bottom:6px;}
+  .pair-head span{font-size:10px; text-transform:uppercase; color:var(--grey); font-weight:700; text-align:center;}
+
+  .status-row{display:grid; grid-template-columns:1.8fr 1.2fr; gap:8px; align-items:center; margin-bottom:8px;}
+  .status-row .lbl{font-size:12.5px; font-weight:600; color:#333;}
+  .status-row select{width:100%; padding:8px; border:1px solid var(--line); border-radius:6px; font-size:13px;}
+
+  .item-card{border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:12px; position:relative; background:#fbfbfc;}
+  .item-card .item-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+  .item-card .item-head b{color:var(--navy); font-size:14px;}
+  .item-card .remove-item{color:var(--danger); background:none; border:none; font-size:13px; font-weight:600;}
+
+  .photo-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:10px;}
+  .photo-thumb{position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; border:1px solid var(--line);}
+  .photo-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .photo-thumb .del{position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:#fff; border:none; width:22px; height:22px; border-radius:50%; font-size:13px; line-height:1;}
+  .add-photo-btn{display:flex; align-items:center; justify-content:center; aspect-ratio:1; border:2px dashed #EBB98A; border-radius:8px; color:var(--navy-light); font-size:13px; text-align:center; flex-direction:column; gap:4px; background:#FDF5EE; cursor:pointer;}
+  .add-photo-btn input{display:none;}
+
+  button.primary{background:var(--navy); color:#fff; border:none; border-radius:10px; padding:13px; font-size:16px; font-weight:600; width:100%; margin-top:6px;}
+  button.secondary{background:#fff; color:var(--navy); border:1px solid var(--navy); border-radius:10px; padding:13px; font-size:15px; font-weight:600; width:100%; margin-top:10px;}
+  button.add-item{width:100%; padding:12px; border:2px dashed #EBB98A; background:#FDF5EE; color:var(--navy-light); border-radius:10px; font-weight:600; font-size:14px; margin-top:4px;}
+  .back-link{background:none; border:none; color:#fff; font-size:15px; padding:0;}
+
+  #printArea{display:none;}
+  @media print{
+    header, #appShell{display:none !important;}
+    #printArea{display:block !important;}
+    body{background:#fff; padding:0;}
+  }
+  #printArea{padding:16px; font-family:Calibri, "Lato", "Segoe UI", "Helvetica Neue", Arial, sans-serif; color:#111; font-size:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  #printArea h1{color:var(--navy); font-size:22px; text-align:center; margin-bottom:2px;}
+  #printArea .p-sub{text-align:center; color:#777; font-size:11px; margin-bottom:14px;}
+  #printArea table.meta{width:100%; border-collapse:collapse; margin-bottom:10px; font-size:11px;}
+  #printArea table.meta td{border:1px solid #ccc; padding:5px 7px;}
+  #printArea table.meta td.label{background:#f2f2f2; font-weight:bold; width:22%;}
+  #printArea h2.sect{background:var(--navy); color:#fff; padding:5px 10px; font-size:12px; margin:14px 0 6px;}
+  #printArea table.datagrid{width:100%; border-collapse:collapse; margin-bottom:10px; font-size:10.5px;}
+  #printArea table.datagrid th, #printArea table.datagrid td{border:1px solid #ccc; padding:4px 5px; text-align:center;}
+  #printArea table.datagrid td.rl{text-align:left; font-weight:bold; background:#f7f7f7;}
+  #printArea .kv{width:100%; border-collapse:collapse; font-size:11px; margin-bottom:8px; table-layout:fixed;}
+  #printArea .kv td{border:1px solid #ccc; padding:4px 6px; width:25%; word-wrap:break-word;}
+  #printArea .kv td.k{font-weight:bold; background:#f7f7f7;}
+  #printArea .kv td.v{font-weight:normal;}
+  #printArea .pi-photos{margin:8px 0;}
+  #printArea .photo-frame{display:inline-block; width:31%; margin:0 1.5% 10px 0; vertical-align:top; break-inside:avoid; page-break-inside:avoid;}
+  #printArea .photo-frame img{width:100%; display:block; border:1px solid #ccc; border-radius:3px;}
+  #printArea .photo-entry-label{break-after:avoid-page; page-break-after:avoid;}
+  #printArea table{break-inside:auto;}
+  #printArea table tr{break-inside:avoid; page-break-inside:avoid;}
+  #printArea table td, #printArea table th{break-inside:avoid; page-break-inside:avoid;}
+</style>
+</head>
+<body>
+
+<div id="appShell">
+  <header>
+    <button class="back-link" id="backBtn" style="visibility:hidden;">&larr; Back</button>
+    <h1 id="headerTitle">ATS Inspection Reports</h1>
+    <button id="headerAction">New</button>
+  </header>
+  <main id="mainArea"></main>
+</div>
+
+<div id="printArea"></div>
+
+<script>
+/* =============== Reference data (pulled from source workbook) =============== */
+const MANUFACTURERS = ["CAT/ZENITH","CAT/EATON","EATON/CUTLER HAMMER","ASCO","GE/ZENITH","LAKE SHORE","RUSSELECTRIC","WESTINGHOUSE","KOHLER","CUMMINS/ONAN","GE","SCHNEIDER/SQUARE D","SIEMENS","S&C","GENERAC","THOMPSON TECHNOLOGIES","OTHER"];
+const POLES_PHASES = ["2 POLE / 1\u00F8","3 POLE / 1\u00F8","3 POLE / 3\u00F8","4 POLE / 3\u00F8"];
+const TRANSITION_TYPES = ["OPEN","CLOSED","DELAYED"];
+const ENCLOSURE_TYPES = ["TYPE 1","TYPE 2","TYPE 3","TYPE 3R","TYPE 3S","TYPE 3X","TYPE 3RX","TYPE 3SX","TYPE 4","TYPE 4X","TYPE 5","TYPE 6","TYPE 6P","TYPE 7","TYPE 8","TYPE 9","TYPE 10","TYPE 12","TYPE 12K","TYPE 13"];
+const RESISTANCE_SCALES = ["\u00B5\u03A9","m\u03A9","\u03A9","K\u03A9","M\u03A9","G\u03A9","T\u03A9"];
+const STATUS_OPTIONS = ["ACCEPTABLE","NEEDS ATTENTION","PERFORMED","CORRECTED","ENERGIZED - NOT PERFORMED","NOT APPLICABLE"];
+const YES_NO_OPTIONS = ["YES","NO","PASSED","FAILED"];
+const OVERALL_RESULT_OPTIONS = ["PASS","FAIL","OTHER"];
+const TEST_EQUIPMENT_TYPES = ["INSULATION TESTER","AMMETER","MULTIMETER","DRLO","IR CAMERA","TORQUE WRENCH","OTHER"];
+
+const SYSTEM_CONFIG_ITEMS = ["S1 SETPOINT VOLTAGE","S2 SETPOINT VOLTAGE","S1 SENSING (3PH/1PH)","S2 SENSING (3PH/1PH)","SYSTEM FREQUENCY","% PHASE UNBALANCE"];
+const SOURCE_PROTECTION_ITEMS = ["OVER VOLTAGE PU","OVER VOLTAGE DO","UNDER VOLTAGE DO","UNDER VOLTAGE PU","OVER FREQUENCY PU","OVER FREQUENCY DO","UNDER FREQUENCY DO","UNDER FREQUENCY PU"];
+const ENGINE_CONTROL_ITEMS = ["START DELAY","WARM UP DELAY","COOL DOWN DELAY","ELEVATOR DELAY LOGIC","PRE TRANSFER DELAY","POST TRANSFER DELAY","CLOSED TRANSITION LOGIC","PHASE ANGLE WINDOW","DWELL TIME","DISCONNECT TIME","EXERCISER"];
+const MECHANISM_LOGIC_ITEMS = ["PREFERRED SOURCE","COMMIT TO TRANSFER","TIME DELAY S1 TO S2","TIME DELAY NEUTRAL","TIME DELAY S2 TO S1","MANUAL RETRANSFER","IN PHASE SEQUENCING","PHASE ROTATION"];
+const FIELD_INSPECTION_ITEMS = ["INTERIOR CLEANLINESS","ENCLOSURE CONDITION","SAFETY LABELING","INSTRUCTION LABELS","HRC (ARC FLASH) LABELING","SAFETY INTERLOCKS","MANUALS/SCHEMATICS","CHAFFED WIRING","GROUND CABLE ON DOOR","MANUAL OPERATOR","INHIBIT SWITCH","DOOR FASTENERS","OPERATOR PANEL","CHANGE BATTERY","DATE AND TIME","INSULATED BARRIERS","PROPER GROUNDING","VOLT SENSING CALIBRATION","RESEAT RELAYS/PLUGS","WIRING PULL TEST","CHECK HARDWARE TORQUE","LUBE MOVABLE PARTS","CONTACT SURFACES"];
+
+const SOURCE_ROWS = [{key:"switch_s1",label:"SWITCH SOURCE 1"},{key:"switch_s2",label:"SWITCH SOURCE 2"},{key:"bypass_s1",label:"BYPASS SOURCE 1"},{key:"bypass_s2",label:"BYPASS SOURCE 2"}];
+const VOLTAGE_COLS = [{key:"l1_l2",label:"L1-L2"},{key:"l2_l3",label:"L2-L3"},{key:"l3_l1",label:"L3-L1"},{key:"l1_n",label:"L1-N"},{key:"l2_n",label:"L2-N"},{key:"l3_n",label:"L3-N"}];
+const ABCN_COLS = [{key:"a",label:"A"},{key:"b",label:"B"},{key:"c",label:"C"},{key:"n",label:"N"}];
+const INSULATION_COLS = [{key:"a_gnd",label:"A-GND"},{key:"b_gnd",label:"B-GND"},{key:"c_gnd",label:"C-GND"},{key:"n_gnd",label:"N-GND"},{key:"a_b",label:"A-B"},{key:"b_c",label:"B-C"},{key:"c_a",label:"C-A"}];
+const RATING_ROWS = [{key:"inst",label:"INST."},{key:"grd",label:"GRD."},{key:"fuse",label:"FUSE"}];
+const RATING_COLS = [{key:"long",label:"LONG"},{key:"short",label:"SHORT"}];
+
+/* =============== IndexedDB helper =============== */
+const DB_NAME = "atsInspectionsDB";
+const STORE = "reports";
+function openDB(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: "id" });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function dbPut(report){
+  const db = await openDB();
+  return new Promise((res, rej)=>{
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).put(report);
+    tx.oncomplete = () => res();
+    tx.onerror = () => rej(tx.error);
+  });
+}
+async function dbGetAll(){
+  const db = await openDB();
+  return new Promise((res, rej)=>{
+    const tx = db.transaction(STORE, "readonly");
+    const req = tx.objectStore(STORE).getAll();
+    req.onsuccess = () => res(req.result.sort((a,b)=> b.updatedAt - a.updatedAt));
+    req.onerror = () => rej(req.error);
+  });
+}
+async function dbDelete(id){
+  const db = await openDB();
+  return new Promise((res, rej)=>{
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).delete(id);
+    tx.oncomplete = () => res();
+    tx.onerror = () => rej(tx.error);
+  });
+}
+
+/* =============== App state & data model =============== */
+let currentReport = null;
+
+function blankReport(){
+  return {
+    id: "r_" + Date.now() + "_" + Math.random().toString(36).slice(2,8),
+    values: {},
+    photoSections: [ blankPhotoSection() ],
+    testEquipment: [ blankTestEquipmentItem() ],
+    updatedAt: Date.now()
+  };
+}
+function blankPhotoSection(){
+  return { id: "p_" + Math.random().toString(36).slice(2,8), label:"", notes:"", photos: [] };
+}
+function blankTestEquipmentItem(){
+  return { id: "e_" + Math.random().toString(36).slice(2,8), type:"", makeModel:"", serial:"", calibrated:"" };
+}
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,""); }
+function val(key){ const v = currentReport.values[key]; return (v !== undefined && v !== null) ? String(v).toUpperCase() : ""; }
+function upper(s){ return (s === undefined || s === null) ? "" : String(s).toUpperCase(); }
+function liveUppercase(el){
+  if(el.tagName === "SELECT") return;
+  if(el.tagName === "INPUT" && el.type === "date") return;
+  const start = el.selectionStart, end = el.selectionEnd;
+  const upperVal = el.value.toUpperCase();
+  if(upperVal !== el.value){
+    el.value = upperVal;
+    if(typeof start === "number" && typeof end === "number"){
+      try{ el.setSelectionRange(start, end); }catch(e){}
+    }
+  }
+}
+function esc(s){ return (s===undefined||s===null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+/* =============== Generic field renderers =============== */
+function textField(key, label, placeholder, type){
+  type = type || "text";
+  return `<div class="field"><label>${esc(label)}</label><input type="${type}" data-key="${key}" value="${esc(val(key))}" placeholder="${esc(placeholder||"")}"></div>`;
+}
+function textAreaField(key, label, placeholder){
+  return `<div class="field"><label>${esc(label)}</label><textarea data-key="${key}" placeholder="${esc(placeholder||"")}">${esc(val(key))}</textarea></div>`;
+}
+function selectField(key, label, options){
+  return `<div class="field"><label>${esc(label)}</label><select data-key="${key}">
+    <option value=""></option>
+    ${options.map(o=>`<option value="${esc(o)}" ${val(key)===o?"selected":""}>${esc(o)}</option>`).join("")}
+  </select></div>`;
+}
+
+function pairedTable(items, prefix){
+  const rows = items.map(label=>{
+    const base = prefix + "_" + slug(label);
+    return `<div class="pair-row">
+      <div class="lbl">${esc(label)}</div>
+      <input type="text" data-key="${base}_found" value="${esc(val(base+"_found"))}" placeholder="As found">
+      <input type="text" data-key="${base}_left" value="${esc(val(base+"_left"))}" placeholder="As left">
+    </div>`;
+  }).join("");
+  return `<div class="pair-head"><span></span><span>As Found</span><span>As Left</span></div>${rows}`;
+}
+
+function statusChecklist(items, prefix){
+  return items.map(label=>{
+    const base = prefix + "_" + slug(label);
+    return `<div class="status-row">
+      <div class="lbl">${esc(label)}</div>
+      <select data-key="${base}_status">
+        <option value=""></option>
+        ${STATUS_OPTIONS.map(o=>`<option value="${esc(o)}" ${val(base+"_status")===o?"selected":""}>${esc(o)}</option>`).join("")}
+      </select>
+    </div>`;
+  }).join("");
+}
+
+function readingsGrid(rows, cols, prefix, unitLabel){
+  const head = `<tr><th style="text-align:left;">&nbsp;</th>${cols.map(c=>`<th>${esc(c.label)}</th>`).join("")}</tr>`;
+  const body = rows.map(r=>{
+    const cells = cols.map(c=>{
+      const key = `${prefix}_${r.key}_${c.key}`;
+      return `<td><input type="text" data-key="${key}" value="${esc(val(key))}"></td>`;
+    }).join("");
+    return `<tr><td class="rowlabel">${esc(r.label)}</td>${cells}</tr>`;
+  }).join("");
+  return `<table class="gridtable">${head}${body}</table>`;
+}
+
+function ratingFields(prefix){
+  return `
+  <div class="row3">
+    ${textField(prefix+"_rating","Rating")}
+    ${textField(prefix+"_long","Long")}
+    ${textField(prefix+"_short","Short")}
+  </div>
+  <div class="row3">
+    ${textField(prefix+"_inst","Inst.")}
+    ${textField(prefix+"_grd","Grd.")}
+    ${textField(prefix+"_fuse","Fuse")}
+  </div>`;
+}
+
+/* =============== List view =============== */
+const mainArea = document.getElementById("mainArea");
+const headerTitle = document.getElementById("headerTitle");
+const headerAction = document.getElementById("headerAction");
+const backBtn = document.getElementById("backBtn");
+
+async function renderList(){
+  headerTitle.textContent = "ATS Inspection Reports";
+  headerAction.textContent = "New";
+  backBtn.style.visibility = "hidden";
+  headerAction.onclick = () => { currentReport = blankReport(); renderEdit(); };
+
+  const reports = await dbGetAll();
+  const importBar = `
+    <div class="card" style="padding:14px 16px; margin-bottom:14px;">
+      <button class="secondary" id="importBtn" style="margin-top:0;">Import Report (.json)</button>
+      <input type="file" id="importInput" accept="application/json,.json" style="display:none;">
+      <div class="subnote" style="margin-top:8px; margin-bottom:0;">Got a report file from OneDrive or Files? Import it here to view or edit it.</div>
+    </div>`;
+  if(reports.length === 0){
+    mainArea.innerHTML = importBar + `<div class="empty-state">No reports yet.<br>Tap "New" to start a Transfer Switch Inspection report.</div>`;
+    wireImportControls();
+  } else {
+    mainArea.innerHTML = importBar + reports.map(r => {
+      const v = r.values || {};
+      const photoCount = (r.photoSections||[]).reduce((n,s)=>n+(s.photos?s.photos.length:0),0);
+      const result = v.overall_result || "";
+      const badgeColor = result==="PASS" ? "#2e7d32" : result==="FAIL" ? "#c0392b" : "#8a8f98";
+      const badge = result ? `<span style="display:inline-block; margin-left:8px; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:700; letter-spacing:0.03em; color:#fff; background:${badgeColor}; vertical-align:middle;">${esc(result)}</span>` : "";
+      return `
+      <div class="report-card" data-id="${r.id}">
+        <div class="info">
+          <b>${esc(upper(v.job_name)) || "(Untitled job)"} ${v.equipment_id ? "— " + esc(upper(v.equipment_id)) : ""}${badge}</b>
+          <span>${esc(v.date) || "no date"} · ${esc(upper(v.tested_by_name)) || "no tech name"} · ${photoCount} photo(s)</span>
+        </div>
+        <div class="actions">
+          <button class="delete-list-btn" data-deleteid="${r.id}" title="Delete report" style="color:#c0392b;">\u{1F5D1}</button>
+          <button class="open-btn">\u203A</button>
+        </div>
+      </div>`;
+    }).join("");
+    mainArea.querySelectorAll(".delete-list-btn").forEach(btn=>{
+      btn.addEventListener("click", async (e)=>{
+        e.stopPropagation();
+        const id = btn.dataset.deleteid;
+        const rep = reports.find(x=>x.id===id);
+        const jobLabel = (rep && rep.values && rep.values.job_name) || "this report";
+        if(confirm(`Delete "${jobLabel}"? This cannot be undone.`)){
+          await dbDelete(id);
+          renderList();
+        }
+      });
+    });
+    mainArea.querySelectorAll(".report-card").forEach(el=>{
+      el.addEventListener("click", ()=>{
+        currentReport = reports.find(r=>r.id===el.dataset.id);
+        renderEdit();
+      });
+    });
+    wireImportControls();
+  }
+}
+
+function wireImportControls(){
+  const importBtn = document.getElementById("importBtn");
+  const importInput = document.getElementById("importInput");
+  if(!importBtn || !importInput) return;
+  importBtn.addEventListener("click", ()=> importInput.click());
+  importInput.addEventListener("change", async (e)=>{
+    const file = e.target.files && e.target.files[0];
+    if(file) await handleImportFile(file);
+    importInput.value = "";
+  });
+}
+
+async function handleImportFile(file){
+  try{
+    const text = await file.text();
+    const imported = JSON.parse(text);
+    if(!imported || typeof imported !== "object" || !imported.values){
+      alert("That file doesn't look like a valid inspection report.");
+      return;
+    }
+    if(!imported.id){
+      imported.id = "r_" + Date.now() + "_" + Math.random().toString(36).slice(2,8);
+    }
+    const existing = await dbGetAll();
+    const match = existing.find(rep => rep.id === imported.id);
+    if(match){
+      const jobLabel = (match.values && match.values.job_name) || "Untitled report";
+      const overwrite = confirm(`"${jobLabel}" already exists on this device. Overwrite it with the imported version?\n\nTap Cancel to import as a separate copy instead.`);
+      if(!overwrite){
+        imported.id = "r_" + Date.now() + "_" + Math.random().toString(36).slice(2,8);
+      }
+    }
+    if(!imported.photoSections) imported.photoSections = [blankPhotoSection()];
+    if(!imported.testEquipment || !imported.testEquipment.length) imported.testEquipment = [blankTestEquipmentItem()];
+    imported.updatedAt = Date.now();
+    await dbPut(imported);
+    renderList();
+    alert("Report imported.");
+  }catch(err){
+    alert("Couldn't read that file: " + err.message);
+  }
+}
+
+/* =============== Photo section rendering =============== */
+function photoSectionHtml(sec, idx){
+  return `
+  <div class="item-card" data-photosec="${sec.id}">
+    <div class="item-head"><b>Photo Entry ${idx+1}</b>
+      <button class="remove-item" data-removephoto="${sec.id}">Remove</button>
+    </div>
+    <div class="field"><label>Label / Area</label>
+      <input type="text" data-photofield="label" data-photosec="${sec.id}" value="${esc(upper(sec.label))}" placeholder="e.g., Source 1 contacts, close-up">
+    </div>
+    <div class="field"><label>Notes</label>
+      <textarea data-photofield="notes" data-photosec="${sec.id}" placeholder="Describe what the photo(s) show...">${esc(upper(sec.notes))}</textarea>
+    </div>
+    <div class="field"><label>Photos</label>
+      <div class="photo-grid">
+        ${sec.photos.map((p, pIdx) => `
+          <div class="photo-thumb">
+            <img src="${p}">
+            <button class="del" data-delphoto="${sec.id}" data-pidx="${pIdx}">&times;</button>
+          </div>
+        `).join("")}
+        <label class="add-photo-btn">
+          <span>\uD83D\uDCF7</span><span>Add</span>
+          <input type="file" accept="image/*" multiple data-photoinput="${sec.id}">
+        </label>
+      </div>
+    </div>
+  </div>`;
+}
+
+function testEquipmentItemHtml(item, idx){
+  return `
+  <div class="item-card" data-equip="${item.id}">
+    <div class="item-head"><b>Test Equipment ${idx+1}</b>
+      <button class="remove-item" data-removeequip="${item.id}">Remove</button>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Equipment</label>
+        <select data-equipfield="type" data-equip="${item.id}">
+          <option value=""></option>
+          ${TEST_EQUIPMENT_TYPES.map(o=>`<option value="${esc(o)}" ${item.type===o?"selected":""}>${esc(o)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="field"><label>Make / Model</label>
+        <input type="text" data-equipfield="makeModel" data-equip="${item.id}" value="${esc(upper(item.makeModel))}">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Serial #</label>
+        <input type="text" data-equipfield="serial" data-equip="${item.id}" value="${esc(upper(item.serial))}">
+      </div>
+      <div class="field"><label>Last Calibrated</label>
+        <input type="date" data-equipfield="calibrated" data-equip="${item.id}" value="${esc(item.calibrated)}">
+      </div>
+    </div>
+  </div>`;
+}
+
+/* =============== Edit view =============== */
+function renderEdit(keepScroll){
+  const savedScroll = keepScroll ? window.scrollY : 0;
+  headerTitle.textContent = "Edit Report";
+  headerAction.textContent = "Save";
+  backBtn.style.visibility = "visible";
+  backBtn.onclick = async () => { await persistCurrent(); renderList(); };
+  headerAction.onclick = async () => { await persistCurrent(); flashSaved(); };
+
+  mainArea.innerHTML = `
+    <div class="card">
+      <h2>Job Info</h2>
+      <div class="row2">
+        ${textField("job_name","Job Name")}
+        ${textField("work_order","Work Order #")}
+      </div>
+      <div class="row2">
+        ${textField("street","Street")}
+        ${textField("city_state_zip","City / State / Zip")}
+      </div>
+      <div class="row2">
+        ${textField("date","Date","","date")}
+        ${textField("equipment_id","Equipment ID")}
+      </div>
+      <div class="row2">
+        ${textField("poc","Point of Contact")}
+        ${textField("poc_info","POC Information")}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Switch Data</h2>
+      <div class="row2">
+        ${selectField("manufacturer","Manufacturer", MANUFACTURERS)}
+        ${textField("rated_voltage","Rated Voltage")}
+      </div>
+      <div class="row2">
+        ${textField("switch_model","Switch Model #")}
+        ${textField("rated_current","Rated Current")}
+      </div>
+      <div class="row2">
+        ${textField("switch_serial","Switch Serial #")}
+        ${selectField("poles_phases","# Poles / Phases", POLES_PHASES)}
+      </div>
+      <div class="row2">
+        ${textField("controller_model","Controller Model #")}
+        ${selectField("nema_enclosure","NEMA Enclosure Type", ENCLOSURE_TYPES)}
+      </div>
+      <div class="row2">
+        ${textField("controller_serial","Controller Serial #")}
+        ${textField("num_transfers","# Transfers")}
+      </div>
+      <div class="row2">
+        <div></div>
+        ${selectField("transition_type","Transition Type", TRANSITION_TYPES)}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Isolation / Overcurrent Protection</h2>
+      <h3>Source 1</h3>
+      <div class="row2">${textField("iso_s1_device","Device")}${textField("iso_s1_makemodel","Make / Model")}</div>
+      ${textField("iso_s1_location","Location")}
+      ${ratingFields("iso_s1")}
+      <h3>Source 2</h3>
+      <div class="row2">${textField("iso_s2_device","Device")}${textField("iso_s2_makemodel","Make / Model")}</div>
+      ${textField("iso_s2_location","Location")}
+      ${ratingFields("iso_s2")}
+    </div>
+
+    <div class="card">
+      <h2>Controller Settings — System Configuration</h2>
+      ${pairedTable(SYSTEM_CONFIG_ITEMS, "sysconf")}
+    </div>
+
+    <div class="card">
+      <h2>Controller Settings — Source 1 Protection</h2>
+      ${pairedTable(SOURCE_PROTECTION_ITEMS, "src1prot")}
+    </div>
+
+    <div class="card">
+      <h2>Controller Settings — Source 2 Protection</h2>
+      ${pairedTable(SOURCE_PROTECTION_ITEMS, "src2prot")}
+    </div>
+
+    <div class="card">
+      <h2>Engine Control Logic</h2>
+      ${pairedTable(ENGINE_CONTROL_ITEMS, "engctrl")}
+    </div>
+
+    <div class="card">
+      <h2>Mechanism Logic</h2>
+      ${pairedTable(MECHANISM_LOGIC_ITEMS, "mechlogic")}
+    </div>
+
+    <div class="card">
+      <h2>Field Inspection Checklist</h2>
+      ${statusChecklist(FIELD_INSPECTION_ITEMS, "fieldinsp")}
+    </div>
+
+    <div class="card">
+      <h2>Line / Phase Voltage Readings</h2>
+      <div class="subnote">Should be within 2% difference from average</div>
+      ${readingsGrid(SOURCE_ROWS, VOLTAGE_COLS, "volt")}
+    </div>
+
+    <div class="card">
+      <h2>Line Amperage Readings</h2>
+      <div class="subnote">Should be within 5% difference from average</div>
+      ${readingsGrid(SOURCE_ROWS, ABCN_COLS, "amp")}
+    </div>
+
+    <div class="card">
+      <h2>Milli-Volt Readings</h2>
+      ${readingsGrid(SOURCE_ROWS, ABCN_COLS, "mv")}
+    </div>
+
+    <div class="card">
+      <h2>DLRO Readings</h2>
+      <div class="subnote">All phases &le;1.5x each other. &lt;100&micro;&Omega; is desired reading.</div>
+      ${readingsGrid(SOURCE_ROWS, ABCN_COLS, "dlro")}
+      ${selectField("dlro_current_scale","Current Scale", RESISTANCE_SCALES)}
+    </div>
+
+    <div class="card">
+      <h2>Insulation Resistance Readings</h2>
+      ${textField("insul_test_voltage","Test Voltage")}
+      <h3>Source 1</h3>
+      ${readingsGrid([{key:"reading",label:"Reading"}], INSULATION_COLS, "insul_s1")}
+      ${selectField("insul_s1_scale","Scale", RESISTANCE_SCALES)}
+      <h3>Source 2</h3>
+      ${readingsGrid([{key:"reading",label:"Reading"}], INSULATION_COLS, "insul_s2")}
+      ${selectField("insul_s2_scale","Scale", RESISTANCE_SCALES)}
+    </div>
+
+    <div class="card">
+      <h2>Thermography &amp; Transfer Test</h2>
+      <div class="row2">
+        ${selectField("thermography_survey","Conducted Thermography Survey", YES_NO_OPTIONS)}
+        ${selectField("transfer_test","Conducted Transfer Test", YES_NO_OPTIONS)}
+      </div>
+      ${textField("environmental_conditions","Environmental Conditions")}
+      ${textAreaField("comments","Comments")}
+    </div>
+
+    <div class="card">
+      <h2>Test Equipment</h2>
+      <div id="equipWrap">${currentReport.testEquipment.map((it,i)=>testEquipmentItemHtml(it,i)).join("")}</div>
+      <button class="add-item" id="addEquipBtn">+ Add Test Equipment</button>
+    </div>
+
+    <div class="card">
+      <h2>Overall Inspection Results</h2>
+      ${selectField("overall_result","Result", OVERALL_RESULT_OPTIONS)}
+      ${textAreaField("overall_result_notes","Notes")}
+    </div>
+
+    <div class="card">
+      <h2>Sign-off</h2>
+      <h3>Tested By</h3>
+      <div class="row2">${textField("tested_by_name","Name")}${textField("tested_by_date","Date","","date")}</div>
+      <h3>Work Accepted By</h3>
+      <div class="row2">${textField("accepted_by_name","Name")}${textField("accepted_by_date","Date","","date")}</div>
+    </div>
+
+    <div class="card">
+      <h2>Photo Documentation</h2>
+      <div id="photoWrap">${currentReport.photoSections.map((s,i)=>photoSectionHtml(s,i)).join("")}</div>
+      <button class="add-item" id="addPhotoBtn">+ Add Photo Entry</button>
+    </div>
+
+    <button class="primary" id="saveBtn">Save Report</button>
+    <button class="secondary" id="exportBtn">Export / Print as PDF</button>
+    <button class="secondary" id="csvBtn">Export as CSV</button>
+    <button class="secondary" id="shareBtn">Share Report File (for OneDrive)</button>
+    <div class="subnote" style="text-align:center; margin-top:6px;">Tap Share, then choose "Save to OneDrive" to add this report to a shared folder. Anyone can Import that file to view or edit it.</div>
+    <button class="secondary" id="deleteBtn" style="color:#c0392b; border-color:#c0392b;">Delete Report</button>
+  `;
+
+  wireEditEvents();
+  window.scrollTo(0, savedScroll);
+}
+
+function wireEditEvents(){
+  const r = currentReport;
+
+  mainArea.querySelectorAll("[data-key]").forEach(el=>{
+    const handler = ()=>{ liveUppercase(el); r.values[el.dataset.key] = el.value; };
+    el.addEventListener("input", handler);
+    el.addEventListener("change", handler);
+  });
+
+  document.getElementById("addPhotoBtn").addEventListener("click", ()=>{
+    r.photoSections.push(blankPhotoSection());
+    renderEdit(true);
+  });
+
+  mainArea.querySelectorAll("[data-removephoto]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const id = btn.dataset.removephoto;
+      r.photoSections = r.photoSections.filter(s=>s.id!==id);
+      if(r.photoSections.length===0) r.photoSections.push(blankPhotoSection());
+      renderEdit(true);
+    });
+  });
+
+  mainArea.querySelectorAll("[data-photofield]").forEach(el=>{
+    const handler = ()=>{
+      liveUppercase(el);
+      const sec = r.photoSections.find(s=>s.id===el.dataset.photosec);
+      if(sec) sec[el.dataset.photofield] = el.value;
+    };
+    el.addEventListener("input", handler);
+  });
+
+  mainArea.querySelectorAll("[data-photoinput]").forEach(input=>{
+    input.addEventListener("change", async (e)=>{
+      const sec = r.photoSections.find(s=>s.id===input.dataset.photoinput);
+      const files = Array.from(e.target.files || []);
+      for(const file of files){
+        let dataUrl;
+        try{
+          dataUrl = await resizeImage(file);
+        }catch(err){
+          dataUrl = await fileToDataUrl(file); // fallback: store original if compression fails
+        }
+        sec.photos.push(dataUrl);
+      }
+      renderEdit(true);
+    });
+  });
+
+  mainArea.querySelectorAll("[data-delphoto]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const sec = r.photoSections.find(s=>s.id===btn.dataset.delphoto);
+      sec.photos.splice(Number(btn.dataset.pidx), 1);
+      renderEdit(true);
+    });
+  });
+
+  document.getElementById("addEquipBtn").addEventListener("click", ()=>{
+    r.testEquipment.push(blankTestEquipmentItem());
+    renderEdit(true);
+  });
+
+  mainArea.querySelectorAll("[data-removeequip]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const id = btn.dataset.removeequip;
+      r.testEquipment = r.testEquipment.filter(it=>it.id!==id);
+      if(r.testEquipment.length===0) r.testEquipment.push(blankTestEquipmentItem());
+      renderEdit(true);
+    });
+  });
+
+  mainArea.querySelectorAll("[data-equipfield]").forEach(el=>{
+    const handler = ()=>{
+      liveUppercase(el);
+      const item = r.testEquipment.find(it=>it.id===el.dataset.equip);
+      if(item) item[el.dataset.equipfield] = el.value;
+    };
+    el.addEventListener("input", handler);
+    el.addEventListener("change", handler);
+  });
+
+  document.getElementById("saveBtn").addEventListener("click", async ()=>{
+    await persistCurrent();
+    flashSaved();
+  });
+
+  document.getElementById("exportBtn").addEventListener("click", async ()=>{
+    await persistCurrent();
+    buildPrintView(r);
+    const originalTitle = document.title;
+    document.title = buildFilename(r);
+    const restoreTitle = () => { document.title = originalTitle; window.removeEventListener("afterprint", restoreTitle); };
+    window.addEventListener("afterprint", restoreTitle);
+    window.print();
+    setTimeout(restoreTitle, 8000); // fallback in case afterprint doesn't fire
+  });
+
+  document.getElementById("csvBtn").addEventListener("click", async ()=>{
+    await persistCurrent();
+    await exportReportCSV(r);
+  });
+
+  document.getElementById("shareBtn").addEventListener("click", async ()=>{
+    await persistCurrent();
+    await exportReportFile(r);
+  });
+
+  document.getElementById("deleteBtn").addEventListener("click", async ()=>{
+    if(confirm("Delete this report? This cannot be undone.")){
+      await dbDelete(r.id);
+      renderList();
+    }
+  });
+}
+
+function fileToDataUrl(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function resizeImage(file, maxDim = 1600, quality = 0.75){
+  return new Promise((resolve, reject)=>{
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if(width > maxDim || height > maxDim){
+        if(width >= height){
+          height = Math.round(height * (maxDim / width));
+          width = maxDim;
+        }else{
+          width = Math.round(width * (maxDim / height));
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(objectUrl);
+      try{
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      }catch(err){
+        reject(err);
+      }
+    };
+    img.onerror = (err) => { URL.revokeObjectURL(objectUrl); reject(err); };
+    img.src = objectUrl;
+  });
+}
+
+function sanitizeFilenamePart(s){
+  return String(s || "").replace(/[\/\\:*?"<>|]/g, "").trim();
+}
+function buildFilename(r){
+  const v = r.values || {};
+  const parts = [v.work_order, "Transfer Switch Inspection Form", v.equipment_id, v.job_name]
+    .map(sanitizeFilenamePart)
+    .filter(Boolean);
+  return parts.length ? parts.join(" - ") : ("Transfer Switch Inspection Form - " + r.id);
+}
+
+async function shareOrDownloadBlob(blob, filename, mimeType){
+  if(navigator.canShare){
+    try{
+      const file = new File([blob], filename, { type: mimeType });
+      if(navigator.canShare({ files: [file] })){
+        await navigator.share({ files: [file], title: filename });
+        return;
+      }
+    }catch(err){
+      if(err && err.name === "AbortError") return; // user cancelled the share sheet
+      // otherwise fall through to direct download
+    }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=> URL.revokeObjectURL(url), 3000);
+}
+
+async function exportReportFile(r){
+  const dataStr = JSON.stringify(r, null, 2);
+  const filename = buildFilename(r) + ".json";
+  const blob = new Blob([dataStr], { type: "application/json" });
+  await shareOrDownloadBlob(blob, filename, "application/json");
+}
+
+function csvEscape(v){
+  v = (v===undefined || v===null) ? "" : String(v);
+  if(/[",\n]/.test(v)){
+    v = '"' + v.replace(/"/g, '""') + '"';
+  }
+  return v;
+}
+
+function buildReportCSVRows(r){
+  const rows = [];
+  const add = (label, value) => rows.push([label, value === undefined || value === null ? "" : value]);
+  const section = (title) => rows.push(["=== " + title + " ===", ""]);
+
+  section("Job Info");
+  add("Job Name", val("job_name"));
+  add("Work Order #", val("work_order"));
+  add("Street", val("street"));
+  add("City/State/Zip", val("city_state_zip"));
+  add("Date", val("date"));
+  add("Equipment ID", val("equipment_id"));
+  add("Point of Contact", val("poc"));
+  add("POC Information", val("poc_info"));
+
+  section("Switch Data");
+  add("Manufacturer", val("manufacturer"));
+  add("Rated Voltage", val("rated_voltage"));
+  add("Switch Model #", val("switch_model"));
+  add("Rated Current", val("rated_current"));
+  add("Switch Serial #", val("switch_serial"));
+  add("# Poles / Phases", val("poles_phases"));
+  add("Controller Model #", val("controller_model"));
+  add("NEMA Enclosure Type", val("nema_enclosure"));
+  add("Controller Serial #", val("controller_serial"));
+  add("# Transfers", val("num_transfers"));
+  add("Transition Type", val("transition_type"));
+
+  ["s1","s2"].forEach(s=>{
+    section("Isolation / Overcurrent Protection \u2014 Source " + (s==="s1"?"1":"2"));
+    const p = "iso_"+s;
+    add("Device", val(p+"_device"));
+    add("Make/Model", val(p+"_makemodel"));
+    add("Location", val(p+"_location"));
+    add("Rating", val(p+"_rating"));
+    add("Long", val(p+"_long"));
+    add("Short", val(p+"_short"));
+    add("Inst.", val(p+"_inst"));
+    add("Grd.", val(p+"_grd"));
+    add("Fuse", val(p+"_fuse"));
+  });
+
+  section("Controller Settings \u2014 System Configuration");
+  SYSTEM_CONFIG_ITEMS.forEach(label=>{
+    const base = "sysconf_" + slug(label);
+    add(label + " (As Found)", val(base+"_found"));
+    add(label + " (As Left)", val(base+"_left"));
+  });
+
+  section("Controller Settings \u2014 Source 1 Protection");
+  SOURCE_PROTECTION_ITEMS.forEach(label=>{
+    const base = "src1prot_" + slug(label);
+    add(label + " (As Found)", val(base+"_found"));
+    add(label + " (As Left)", val(base+"_left"));
+  });
+
+  section("Controller Settings \u2014 Source 2 Protection");
+  SOURCE_PROTECTION_ITEMS.forEach(label=>{
+    const base = "src2prot_" + slug(label);
+    add(label + " (As Found)", val(base+"_found"));
+    add(label + " (As Left)", val(base+"_left"));
+  });
+
+  section("Engine Control Logic");
+  ENGINE_CONTROL_ITEMS.forEach(label=>{
+    const base = "engctrl_" + slug(label);
+    add(label + " (As Found)", val(base+"_found"));
+    add(label + " (As Left)", val(base+"_left"));
+  });
+
+  section("Mechanism Logic");
+  MECHANISM_LOGIC_ITEMS.forEach(label=>{
+    const base = "mechlogic_" + slug(label);
+    add(label + " (As Found)", val(base+"_found"));
+    add(label + " (As Left)", val(base+"_left"));
+  });
+
+  section("Field Inspection Checklist");
+  FIELD_INSPECTION_ITEMS.forEach(label=>{
+    const base = "fieldinsp_" + slug(label);
+    add(label, val(base+"_status"));
+  });
+
+  section("Line / Phase Voltage Readings");
+  SOURCE_ROWS.forEach(row=>{
+    VOLTAGE_COLS.forEach(col=>{
+      add(row.label + " " + col.label, val(`volt_${row.key}_${col.key}`));
+    });
+  });
+
+  section("Line Amperage Readings");
+  SOURCE_ROWS.forEach(row=>{
+    ABCN_COLS.forEach(col=>{
+      add(row.label + " " + col.label, val(`amp_${row.key}_${col.key}`));
+    });
+  });
+
+  section("Milli-Volt Readings");
+  SOURCE_ROWS.forEach(row=>{
+    ABCN_COLS.forEach(col=>{
+      add(row.label + " " + col.label, val(`mv_${row.key}_${col.key}`));
+    });
+  });
+
+  section("DLRO Readings");
+  SOURCE_ROWS.forEach(row=>{
+    ABCN_COLS.forEach(col=>{
+      add(row.label + " " + col.label, val(`dlro_${row.key}_${col.key}`));
+    });
+  });
+  add("DLRO Current Scale", val("dlro_current_scale"));
+
+  section("Insulation Resistance Readings");
+  add("Test Voltage", val("insul_test_voltage"));
+  INSULATION_COLS.forEach(col=>{
+    add("Source 1 Reading " + col.label, val(`insul_s1_reading_${col.key}`));
+  });
+  add("Source 1 Scale", val("insul_s1_scale"));
+  INSULATION_COLS.forEach(col=>{
+    add("Source 2 Reading " + col.label, val(`insul_s2_reading_${col.key}`));
+  });
+  add("Source 2 Scale", val("insul_s2_scale"));
+
+  section("Thermography & Transfer Test");
+  add("Conducted Thermography Survey", val("thermography_survey"));
+  add("Conducted Transfer Test", val("transfer_test"));
+  add("Environmental Conditions", val("environmental_conditions"));
+  add("Comments", val("comments"));
+
+  section("Test Equipment");
+  r.testEquipment.forEach((item, i)=>{
+    add(`Item ${i+1} \u2014 Equipment`, upper(item.type));
+    add(`Item ${i+1} \u2014 Make/Model`, upper(item.makeModel));
+    add(`Item ${i+1} \u2014 Serial #`, upper(item.serial));
+    add(`Item ${i+1} \u2014 Last Calibrated`, item.calibrated);
+  });
+
+  section("Overall Inspection Results");
+  add("Result", val("overall_result"));
+  add("Notes", val("overall_result_notes"));
+
+  section("Sign-off");
+  add("Tested By \u2014 Name", val("tested_by_name"));
+  add("Tested By \u2014 Date", val("tested_by_date"));
+  add("Work Accepted By \u2014 Name", val("accepted_by_name"));
+  add("Work Accepted By \u2014 Date", val("accepted_by_date"));
+
+  section("Photo Documentation");
+  r.photoSections.forEach((s,i)=>{
+    add(`Entry ${i+1} \u2014 Label`, upper(s.label));
+    add(`Entry ${i+1} \u2014 Notes`, upper(s.notes));
+    add(`Entry ${i+1} \u2014 Photo Count`, s.photos.length);
+  });
+
+  return rows;
+}
+
+async function exportReportCSV(r){
+  currentReport = r; // ensure val() reads from this report
+  const rows = buildReportCSVRows(r);
+  const csvBody = rows.map(([k,v]) => csvEscape(k) + "," + csvEscape(v)).join("\r\n");
+  const csv = "\uFEFFField,Value\r\n" + csvBody; // BOM so Excel reads UTF-8 symbols (\u03A9, \u00B5) correctly
+  const filename = buildFilename(r) + ".csv";
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  await shareOrDownloadBlob(blob, filename, "text/csv");
+}
+
+async function persistCurrent(){
+  currentReport.updatedAt = Date.now();
+  await dbPut(currentReport);
+}
+
+function flashSaved(){
+  const btn = document.getElementById("saveBtn");
+  const old = btn.textContent;
+  btn.textContent = "Saved \u2713";
+  setTimeout(()=>{ btn.textContent = old; }, 1200);
+}
+
+/* =============== Print / PDF view =============== */
+function printPairedRows(items, prefix){
+  return `<table class="datagrid"><tr><th style="text-align:left;">&nbsp;</th><th>As Found</th><th>As Left</th></tr>
+    ${items.map(label=>{
+      const base = prefix + "_" + slug(label);
+      return `<tr><td class="rl">${esc(label)}</td><td>${esc(val(base+"_found"))||"&mdash;"}</td><td>${esc(val(base+"_left"))||"&mdash;"}</td></tr>`;
+    }).join("")}
+  </table>`;
+}
+function printStatusRows(items, prefix){
+  return `<table class="datagrid"><tr><th style="text-align:left;">&nbsp;</th><th>Status</th></tr>
+    ${items.map(label=>{
+      const base = prefix + "_" + slug(label);
+      return `<tr><td class="rl">${esc(label)}</td><td>${esc(val(base+"_status"))||"&mdash;"}</td></tr>`;
+    }).join("")}
+  </table>`;
+}
+function printRatingFields(prefix){
+  return `<table class="kv">
+    <tr><td class="k">Rating</td><td class="v">${esc(val(prefix+"_rating"))||"&mdash;"}</td><td class="k">Long</td><td class="v">${esc(val(prefix+"_long"))||"&mdash;"}</td></tr>
+    <tr><td class="k">Short</td><td class="v">${esc(val(prefix+"_short"))||"&mdash;"}</td><td class="k">Inst.</td><td class="v">${esc(val(prefix+"_inst"))||"&mdash;"}</td></tr>
+    <tr><td class="k">Grd.</td><td class="v">${esc(val(prefix+"_grd"))||"&mdash;"}</td><td class="k">Fuse</td><td class="v">${esc(val(prefix+"_fuse"))||"&mdash;"}</td></tr>
+  </table>`;
+}
+function printGrid(rows, cols, prefix){
+  return `<table class="datagrid"><tr><th style="text-align:left;">&nbsp;</th>${cols.map(c=>`<th>${esc(c.label)}</th>`).join("")}</tr>
+    ${rows.map(r=>{
+      const cells = cols.map(c=>`<td>${esc(val(`${prefix}_${r.key}_${c.key}`))||"&mdash;"}</td>`).join("");
+      return `<tr><td class="rl">${esc(r.label)}</td>${cells}</tr>`;
+    }).join("")}
+  </table>`;
+}
+
+function buildPrintView(r){
+  currentReport = r; // ensure val() reads from this report
+  const html = `
+    <h1>TRANSFER SWITCH INSPECTION FORM</h1>
+    <div class="p-sub">${esc(val("job_name"))} ${val("equipment_id") ? " &mdash; " + esc(val("equipment_id")) : ""}</div>
+
+    <table class="meta">
+      <tr><td class="label">Job Name</td><td>${esc(val("job_name"))}</td><td class="label">Work Order #</td><td>${esc(val("work_order"))}</td></tr>
+      <tr><td class="label">Street</td><td>${esc(val("street"))}</td><td class="label">City/State/Zip</td><td>${esc(val("city_state_zip"))}</td></tr>
+      <tr><td class="label">Date</td><td>${esc(val("date"))}</td><td class="label">Equipment ID</td><td>${esc(val("equipment_id"))}</td></tr>
+      <tr><td class="label">Point of Contact</td><td>${esc(val("poc"))}</td><td class="label">POC Info</td><td>${esc(val("poc_info"))}</td></tr>
+    </table>
+
+    <h2 class="sect">SWITCH DATA</h2>
+    <table class="kv">
+      <tr><td class="k">Manufacturer</td><td class="v">${esc(val("manufacturer"))}</td><td class="k">Rated Voltage</td><td class="v">${esc(val("rated_voltage"))}</td></tr>
+      <tr><td class="k">Switch Model #</td><td class="v">${esc(val("switch_model"))}</td><td class="k">Rated Current</td><td class="v">${esc(val("rated_current"))}</td></tr>
+      <tr><td class="k">Switch Serial #</td><td class="v">${esc(val("switch_serial"))}</td><td class="k"># Poles/Phases</td><td class="v">${esc(val("poles_phases"))}</td></tr>
+      <tr><td class="k">Controller Model #</td><td class="v">${esc(val("controller_model"))}</td><td class="k">NEMA Enclosure</td><td class="v">${esc(val("nema_enclosure"))}</td></tr>
+      <tr><td class="k">Controller Serial #</td><td class="v">${esc(val("controller_serial"))}</td><td class="k"># Transfers</td><td class="v">${esc(val("num_transfers"))}</td></tr>
+      <tr><td class="k">Transition Type</td><td class="v" colspan="3">${esc(val("transition_type"))}</td></tr>
+    </table>
+
+    <h2 class="sect">ISOLATION / OVERCURRENT PROTECTION</h2>
+    <b>Source 1:</b> Device: ${esc(val("iso_s1_device"))||"&mdash;"} &nbsp; Make/Model: ${esc(val("iso_s1_makemodel"))||"&mdash;"} &nbsp; Location: ${esc(val("iso_s1_location"))||"&mdash;"}
+    ${printRatingFields("iso_s1")}
+    <b>Source 2:</b> Device: ${esc(val("iso_s2_device"))||"&mdash;"} &nbsp; Make/Model: ${esc(val("iso_s2_makemodel"))||"&mdash;"} &nbsp; Location: ${esc(val("iso_s2_location"))||"&mdash;"}
+    ${printRatingFields("iso_s2")}
+
+    <h2 class="sect">CONTROLLER SETTINGS — SYSTEM CONFIGURATION</h2>
+    ${printPairedRows(SYSTEM_CONFIG_ITEMS, "sysconf")}
+
+    <h2 class="sect">CONTROLLER SETTINGS — SOURCE 1 PROTECTION</h2>
+    ${printPairedRows(SOURCE_PROTECTION_ITEMS, "src1prot")}
+
+    <h2 class="sect">CONTROLLER SETTINGS — SOURCE 2 PROTECTION</h2>
+    ${printPairedRows(SOURCE_PROTECTION_ITEMS, "src2prot")}
+
+    <h2 class="sect">ENGINE CONTROL LOGIC</h2>
+    ${printPairedRows(ENGINE_CONTROL_ITEMS, "engctrl")}
+
+    <h2 class="sect">MECHANISM LOGIC</h2>
+    ${printPairedRows(MECHANISM_LOGIC_ITEMS, "mechlogic")}
+
+    <h2 class="sect">FIELD INSPECTION CHECKLIST</h2>
+    ${printStatusRows(FIELD_INSPECTION_ITEMS, "fieldinsp")}
+
+    <h2 class="sect">LINE / PHASE VOLTAGE READINGS</h2>
+    ${printGrid(SOURCE_ROWS, VOLTAGE_COLS, "volt")}
+
+    <h2 class="sect">LINE AMPERAGE READINGS</h2>
+    ${printGrid(SOURCE_ROWS, ABCN_COLS, "amp")}
+
+    <h2 class="sect">MILLI-VOLT READINGS</h2>
+    ${printGrid(SOURCE_ROWS, ABCN_COLS, "mv")}
+
+    <h2 class="sect">DLRO READINGS (Scale: ${esc(val("dlro_current_scale"))||"&mdash;"})</h2>
+    ${printGrid(SOURCE_ROWS, ABCN_COLS, "dlro")}
+
+    <h2 class="sect">INSULATION RESISTANCE READINGS</h2>
+    <p><b>Test Voltage:</b> ${esc(val("insul_test_voltage")) || "&mdash;"}</p>
+    <b>Source 1 (Scale: ${esc(val("insul_s1_scale"))||"&mdash;"})</b>
+    ${printGrid([{key:"reading",label:"Reading"}], INSULATION_COLS, "insul_s1")}
+    <b>Source 2 (Scale: ${esc(val("insul_s2_scale"))||"&mdash;"})</b>
+    ${printGrid([{key:"reading",label:"Reading"}], INSULATION_COLS, "insul_s2")}
+
+    <h2 class="sect">THERMOGRAPHY &amp; TRANSFER TEST</h2>
+    <table class="kv">
+      <tr><td class="k">Conducted Thermography Survey</td><td class="v">${esc(val("thermography_survey"))}</td>
+          <td class="k">Conducted Transfer Test</td><td class="v">${esc(val("transfer_test"))}</td></tr>
+      <tr><td class="k">Environmental Conditions</td><td class="v" colspan="3">${esc(val("environmental_conditions"))}</td></tr>
+    </table>
+    <p><b>Comments:</b> ${esc(val("comments")) || "&mdash;"}</p>
+
+    <h2 class="sect">TEST EQUIPMENT</h2>
+    <table class="datagrid">
+      <tr><th>Equipment</th><th>Make/Model</th><th>Serial #</th><th>Last Calibrated</th></tr>
+      ${r.testEquipment.map(it=>`<tr><td>${esc(upper(it.type))||"&mdash;"}</td><td>${esc(upper(it.makeModel))||"&mdash;"}</td><td>${esc(upper(it.serial))||"&mdash;"}</td><td>${esc(it.calibrated)||"&mdash;"}</td></tr>`).join("")}
+    </table>
+
+    <h2 class="sect">OVERALL INSPECTION RESULTS</h2>
+    <table class="kv">
+      <tr><td class="k">Result</td><td class="v" style="font-weight:bold; ${val("overall_result")==="PASS"?"color:#2e7d32;":val("overall_result")==="FAIL"?"color:#c0392b;":""}" colspan="3">${esc(val("overall_result")) || "&mdash;"}</td></tr>
+    </table>
+    <p><b>Notes:</b> ${esc(val("overall_result_notes")) || "&mdash;"}</p>
+
+    <h2 class="sect">SIGN-OFF</h2>
+    <table class="kv">
+      <tr><td class="k">Tested By</td><td class="v">${esc(val("tested_by_name"))}</td><td class="k">Date</td><td class="v">${esc(val("tested_by_date"))}</td></tr>
+      <tr><td class="k">Work Accepted By</td><td class="v">${esc(val("accepted_by_name"))}</td><td class="k">Date</td><td class="v">${esc(val("accepted_by_date"))}</td></tr>
+    </table>
+
+    <h2 class="sect">PHOTO DOCUMENTATION</h2>
+    ${r.photoSections.map((s,i)=>`
+      <p class="photo-entry-label"><b>Photo Entry ${i+1}${s.label ? ": " + esc(upper(s.label)) : ""}</b></p>
+      ${s.notes ? `<p>${esc(upper(s.notes))}</p>` : ""}
+      ${s.photos.length ? `<div class="pi-photos">${s.photos.map(p=>`<div class="photo-frame"><img src="${p}"></div>`).join("")}</div>` : "<p><i>No photos attached</i></p>"}
+    `).join("")}
+  `;
+  document.getElementById("printArea").innerHTML = html;
+}
+
+/* =============== Init =============== */
+renderList();
+</script>
+</body>
+</html>
