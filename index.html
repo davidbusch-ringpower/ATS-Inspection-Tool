@@ -79,9 +79,11 @@
     body{background:#fff; padding:0;}
   }
   #printArea{padding:16px; font-family:Calibri, "Lato", "Segoe UI", "Helvetica Neue", Arial, sans-serif; color:#111; font-size:12px; -webkit-print-color-adjust:exact; print-color-adjust:exact; position:relative;}
-  #printArea .report-logo{position:absolute; top:4px; left:4px; width:78px; height:78px;}
-  #printArea h1{color:var(--navy); font-size:22px; text-align:center; margin-bottom:2px;}
-  #printArea .p-sub{text-align:center; color:#777; font-size:11px; margin-bottom:14px;}
+  #printArea .print-header{display:flex; align-items:center; gap:14px; margin-bottom:8px;}
+  #printArea .report-logo{width:64px; height:64px; flex:0 0 auto;}
+  #printArea .print-header-text{flex:1 1 auto;}
+  #printArea h1{color:var(--navy); font-size:22px; text-align:center; margin:0 0 2px 0;}
+  #printArea .p-sub{text-align:center; color:#777; font-size:11px; margin:0;}
   #printArea table.meta{width:100%; border-collapse:collapse; margin-bottom:10px; font-size:11px;}
   #printArea table.meta td{border:1px solid #ccc; padding:5px 7px;}
   #printArea table.meta td.label{background:#f2f2f2; font-weight:bold; width:22%;}
@@ -1051,9 +1053,13 @@ function printGrid(rows, cols, prefix){
 function buildPrintView(r){
   currentReport = r; // ensure val() reads from this report
   const html = `
-    <img class="report-logo" src="${LOGO_DATA_URI}" alt="Ring Power Advanced Electrical Services logo">
-    <h1>TRANSFER SWITCH INSPECTION FORM</h1>
-    <div class="p-sub">${esc(val("job_name"))} ${val("equipment_id") ? " &mdash; " + esc(val("equipment_id")) : ""}</div>
+    <div class="print-header">
+      <img class="report-logo" src="${LOGO_DATA_URI}" alt="Ring Power Advanced Electrical Services logo">
+      <div class="print-header-text">
+        <h1>TRANSFER SWITCH INSPECTION FORM</h1>
+        <div class="p-sub">${esc(val("job_name"))} ${val("equipment_id") ? " &mdash; " + esc(val("equipment_id")) : ""}</div>
+      </div>
+    </div>
 
     <table class="meta">
       <tr><td class="label">Job Name</td><td>${esc(val("job_name"))}</td><td class="label">Work Order #</td><td>${esc(val("work_order"))}</td></tr>
