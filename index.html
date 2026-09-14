@@ -35,9 +35,13 @@
   .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
   .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
   .card{background:var(--card); border-radius:12px; padding:16px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,0.06);}
-  .card h2{font-size:14px; text-transform:uppercase; letter-spacing:0.04em; color:var(--navy); margin:0 0 14px 0; border-bottom:2px solid var(--navy); padding-bottom:8px;}
+  .card h2{font-size:14px; text-transform:uppercase; letter-spacing:0.04em; color:var(--navy); margin:0; border:none; padding:0;}
   .card h3{font-size:12px; text-transform:uppercase; letter-spacing:0.03em; color:var(--navy-light); margin:16px 0 8px;}
   .subnote{font-size:11px; color:var(--grey); margin:-6px 0 12px; font-style:italic;}
+  .card-header-row{display:flex; justify-content:space-between; align-items:center; margin:0 0 14px 0; border-bottom:2px solid var(--navy); padding-bottom:8px;}
+  .collapse-toggle{background:none; border:1px solid var(--navy); color:var(--navy); border-radius:14px; font-size:11px; font-weight:700; padding:4px 10px; white-space:nowrap; margin-left:10px;}
+  .card.card-collapsed{padding-bottom:16px;}
+  .card.card-collapsed > *:not(.card-header-row){display:none;}
 
   table.gridtable{width:100%; border-collapse:collapse; margin-bottom:6px;}
   table.gridtable th{font-size:10px; text-transform:uppercase; color:var(--grey); font-weight:600; padding:4px 3px; text-align:center; border-bottom:1px solid var(--line);}
@@ -194,6 +198,7 @@ function blankReport(){
     values: {},
     photoSections: [ blankPhotoSection() ],
     testEquipment: [ blankTestEquipmentItem() ],
+    collapsedSections: {},
     updatedAt: Date.now()
   };
 }
@@ -206,6 +211,23 @@ function blankTestEquipmentItem(){
 function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,""); }
 function val(key){ const v = currentReport.values[key]; return (v !== undefined && v !== null) ? String(v).toUpperCase() : ""; }
 function upper(s){ return (s === undefined || s === null) ? "" : String(s).toUpperCase(); }
+
+/* =============== Collapsible sections (also controls PDF inclusion) =============== */
+function isSectionCollapsed(key){
+  return !!(currentReport.collapsedSections && currentReport.collapsedSections[key]);
+}
+function cardHeaderRow(key, title){
+  const collapsed = isSectionCollapsed(key);
+  const note = collapsed ? ` <span style="font-weight:400; text-transform:none; font-size:10px; color:var(--grey);">(hidden \u2014 excluded from PDF)</span>` : "";
+  return `<div class="card-header-row">
+    <h2>${esc(title)}${note}</h2>
+    <button type="button" class="collapse-toggle" data-collapsekey="${key}">${collapsed ? "\u25B8 Show" : "\u25BE Hide"}</button>
+  </div>`;
+}
+function cardClass(key){
+  return isSectionCollapsed(key) ? "card card-collapsed" : "card";
+}
+
 function liveUppercase(el){
   if(el.tagName === "SELECT") return;
   if(el.tagName === "INPUT" && el.type === "date") return;
@@ -383,6 +405,7 @@ async function handleImportFile(file){
     }
     if(!imported.photoSections) imported.photoSections = [blankPhotoSection()];
     if(!imported.testEquipment || !imported.testEquipment.length) imported.testEquipment = [blankTestEquipmentItem()];
+    if(!imported.collapsedSections) imported.collapsedSections = {};
     imported.updatedAt = Date.now();
     await dbPut(imported);
     renderList();
@@ -460,8 +483,8 @@ function renderEdit(keepScroll){
   headerAction.onclick = async () => { await persistCurrent(); flashSaved(); };
 
   mainArea.innerHTML = `
-    <div class="card">
-      <h2>Job Info</h2>
+    <div class="${cardClass("job_info")}">
+      ${cardHeaderRow("job_info","Job Info")}
       <div class="row2">
         ${textField("job_name","Job Name")}
         ${textField("work_order","Work Order #")}
@@ -480,8 +503,8 @@ function renderEdit(keepScroll){
       </div>
     </div>
 
-    <div class="card">
-      <h2>Switch Data</h2>
+    <div class="${cardClass("switch_data")}">
+      ${cardHeaderRow("switch_data","Switch Data")}
       <div class="row2">
         ${selectField("manufacturer","Manufacturer", MANUFACTURERS)}
         ${textField("rated_voltage","Rated Voltage")}
@@ -508,8 +531,8 @@ function renderEdit(keepScroll){
       </div>
     </div>
 
-    <div class="card">
-      <h2>Isolation / Overcurrent Protection</h2>
+    <div class="${cardClass("isolation")}">
+      ${cardHeaderRow("isolation","Isolation / Overcurrent Protection")}
       <h3>Source 1</h3>
       <div class="row2">${textField("iso_s1_device","Device")}${textField("iso_s1_makemodel","Make / Model")}</div>
       ${textField("iso_s1_location","Location")}
@@ -520,62 +543,62 @@ function renderEdit(keepScroll){
       ${ratingFields("iso_s2")}
     </div>
 
-    <div class="card">
-      <h2>Controller Settings — System Configuration</h2>
+    <div class="${cardClass("system_config")}">
+      ${cardHeaderRow("system_config","Controller Settings — System Configuration")}
       ${pairedTable(SYSTEM_CONFIG_ITEMS, "sysconf")}
     </div>
 
-    <div class="card">
-      <h2>Controller Settings — Source 1 Protection</h2>
+    <div class="${cardClass("source1_protection")}">
+      ${cardHeaderRow("source1_protection","Controller Settings — Source 1 Protection")}
       ${pairedTable(SOURCE_PROTECTION_ITEMS, "src1prot")}
     </div>
 
-    <div class="card">
-      <h2>Controller Settings — Source 2 Protection</h2>
+    <div class="${cardClass("source2_protection")}">
+      ${cardHeaderRow("source2_protection","Controller Settings — Source 2 Protection")}
       ${pairedTable(SOURCE_PROTECTION_ITEMS, "src2prot")}
     </div>
 
-    <div class="card">
-      <h2>Engine Control Logic</h2>
+    <div class="${cardClass("engine_control")}">
+      ${cardHeaderRow("engine_control","Engine Control Logic")}
       ${pairedTable(ENGINE_CONTROL_ITEMS, "engctrl")}
     </div>
 
-    <div class="card">
-      <h2>Mechanism Logic</h2>
+    <div class="${cardClass("mechanism_logic")}">
+      ${cardHeaderRow("mechanism_logic","Mechanism Logic")}
       ${pairedTable(MECHANISM_LOGIC_ITEMS, "mechlogic")}
     </div>
 
-    <div class="card">
-      <h2>Field Inspection Checklist</h2>
+    <div class="${cardClass("field_inspection")}">
+      ${cardHeaderRow("field_inspection","Field Inspection Checklist")}
       ${statusChecklist(FIELD_INSPECTION_ITEMS, "fieldinsp")}
     </div>
 
-    <div class="card">
-      <h2>Line / Phase Voltage Readings</h2>
+    <div class="${cardClass("voltage_readings")}">
+      ${cardHeaderRow("voltage_readings","Line / Phase Voltage Readings")}
       <div class="subnote">Should be within 2% difference from average</div>
       ${readingsGrid(SOURCE_ROWS, VOLTAGE_COLS, "volt")}
     </div>
 
-    <div class="card">
-      <h2>Line Amperage Readings</h2>
+    <div class="${cardClass("amperage_readings")}">
+      ${cardHeaderRow("amperage_readings","Line Amperage Readings")}
       <div class="subnote">Should be within 5% difference from average</div>
       ${readingsGrid(SOURCE_ROWS, ABCN_COLS, "amp")}
     </div>
 
-    <div class="card">
-      <h2>Milli-Volt Readings</h2>
+    <div class="${cardClass("millivolt_readings")}">
+      ${cardHeaderRow("millivolt_readings","Milli-Volt Readings")}
       ${readingsGrid(SOURCE_ROWS, ABCN_COLS, "mv")}
     </div>
 
-    <div class="card">
-      <h2>DLRO Readings</h2>
+    <div class="${cardClass("dlro_readings")}">
+      ${cardHeaderRow("dlro_readings","DLRO Readings")}
       <div class="subnote">All phases &le;1.5x each other. &lt;100&micro;&Omega; is desired reading.</div>
       ${readingsGrid(SOURCE_ROWS, ABCN_COLS, "dlro")}
       ${selectField("dlro_current_scale","Current Scale", RESISTANCE_SCALES)}
     </div>
 
-    <div class="card">
-      <h2>Insulation Resistance Readings</h2>
+    <div class="${cardClass("insulation_readings")}">
+      ${cardHeaderRow("insulation_readings","Insulation Resistance Readings")}
       ${textField("insul_test_voltage","Test Voltage")}
       <h3>Source 1</h3>
       ${readingsGrid([{key:"reading",label:"Reading"}], INSULATION_COLS, "insul_s1")}
@@ -585,8 +608,8 @@ function renderEdit(keepScroll){
       ${selectField("insul_s2_scale","Scale", RESISTANCE_SCALES)}
     </div>
 
-    <div class="card">
-      <h2>Thermography &amp; Transfer Test</h2>
+    <div class="${cardClass("thermography")}">
+      ${cardHeaderRow("thermography","Thermography &amp; Transfer Test")}
       <div class="row2">
         ${selectField("thermography_survey","Conducted Thermography Survey", YES_NO_OPTIONS)}
         ${selectField("transfer_test","Conducted Transfer Test", YES_NO_OPTIONS)}
@@ -595,28 +618,28 @@ function renderEdit(keepScroll){
       ${textAreaField("comments","Comments")}
     </div>
 
-    <div class="card">
-      <h2>Test Equipment</h2>
+    <div class="${cardClass("test_equipment")}">
+      ${cardHeaderRow("test_equipment","Test Equipment")}
       <div id="equipWrap">${currentReport.testEquipment.map((it,i)=>testEquipmentItemHtml(it,i)).join("")}</div>
       <button class="add-item" id="addEquipBtn">+ Add Test Equipment</button>
     </div>
 
-    <div class="card">
-      <h2>Overall Inspection Results</h2>
+    <div class="${cardClass("overall_results")}">
+      ${cardHeaderRow("overall_results","Overall Inspection Results")}
       ${selectField("overall_result","Result", OVERALL_RESULT_OPTIONS)}
       ${textAreaField("overall_result_notes","Notes")}
     </div>
 
-    <div class="card">
-      <h2>Sign-off</h2>
+    <div class="${cardClass("sign_off")}">
+      ${cardHeaderRow("sign_off","Sign-off")}
       <h3>Tested By</h3>
       <div class="row2">${textField("tested_by_name","Name")}${textField("tested_by_date","Date","","date")}</div>
       <h3>Work Accepted By</h3>
       <div class="row2">${textField("accepted_by_name","Name")}${textField("accepted_by_date","Date","","date")}</div>
     </div>
 
-    <div class="card">
-      <h2>Photo Documentation</h2>
+    <div class="${cardClass("photo_documentation")}">
+      ${cardHeaderRow("photo_documentation","Photo Documentation")}
       <div id="photoWrap">${currentReport.photoSections.map((s,i)=>photoSectionHtml(s,i)).join("")}</div>
       <button class="add-item" id="addPhotoBtn">+ Add Photo Entry</button>
     </div>
@@ -627,6 +650,9 @@ function renderEdit(keepScroll){
     <button class="secondary" id="shareBtn">Share Report File (for OneDrive)</button>
     <div class="subnote" style="text-align:center; margin-top:6px;">Tap Share, then choose "Save to OneDrive" to add this report to a shared folder. Anyone can Import that file to view or edit it.</div>
     <button class="secondary" id="deleteBtn" style="color:#c0392b; border-color:#c0392b;">Delete Report</button>
+
+    <button class="secondary" id="repeatSiteBtn" style="margin-top:24px;">Save and Start New Report for Repeat Site</button>
+    <div class="subnote" style="text-align:center; margin-top:6px;">Saves this report, then opens a new blank report carrying over just the Job Info fields (site, address, contact, etc.).</div>
   `;
 
   wireEditEvents();
@@ -635,6 +661,15 @@ function renderEdit(keepScroll){
 
 function wireEditEvents(){
   const r = currentReport;
+
+  mainArea.querySelectorAll("[data-collapsekey]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const key = btn.dataset.collapsekey;
+      if(!r.collapsedSections) r.collapsedSections = {};
+      r.collapsedSections[key] = !r.collapsedSections[key];
+      renderEdit(true);
+    });
+  });
 
   mainArea.querySelectorAll("[data-key]").forEach(el=>{
     const handler = ()=>{ liveUppercase(el); r.values[el.dataset.key] = el.value; };
@@ -745,6 +780,17 @@ function wireEditEvents(){
       await dbDelete(r.id);
       renderList();
     }
+  });
+
+  document.getElementById("repeatSiteBtn").addEventListener("click", async ()=>{
+    await persistCurrent();
+    const JOB_INFO_KEYS = ["job_name","work_order","street","city_state_zip","date","equipment_id","poc","poc_info"];
+    const newReport = blankReport();
+    JOB_INFO_KEYS.forEach(k=>{
+      if(r.values[k]) newReport.values[k] = r.values[k];
+    });
+    currentReport = newReport;
+    renderEdit();
   });
 }
 
@@ -1052,7 +1098,8 @@ function printGrid(rows, cols, prefix){
 
 function buildPrintView(r){
   currentReport = r; // ensure val() reads from this report
-  const html = `
+
+  const headerHtml = `
     <div class="print-header">
       <img class="report-logo" src="${LOGO_DATA_URI}" alt="Ring Power Advanced Electrical Services logo">
       <div class="print-header-text">
@@ -1066,8 +1113,10 @@ function buildPrintView(r){
       <tr><td class="label">Street</td><td>${esc(val("street"))}</td><td class="label">City/State/Zip</td><td>${esc(val("city_state_zip"))}</td></tr>
       <tr><td class="label">Date</td><td>${esc(val("date"))}</td><td class="label">Equipment ID</td><td>${esc(val("equipment_id"))}</td></tr>
       <tr><td class="label">Point of Contact</td><td>${esc(val("poc"))}</td><td class="label">POC Info</td><td>${esc(val("poc_info"))}</td></tr>
-    </table>
+    </table>`; // Job Info always prints \u2014 it has no h2.sect section of its own to hide
 
+  const sectionsHtml = [
+    { key: "switch_data", html: `
     <h2 class="sect">SWITCH DATA</h2>
     <table class="kv">
       <tr><td class="k">Manufacturer</td><td class="v">${esc(val("manufacturer"))}</td><td class="k">Rated Voltage</td><td class="v">${esc(val("rated_voltage"))}</td></tr>
@@ -1076,84 +1125,106 @@ function buildPrintView(r){
       <tr><td class="k">Controller Model #</td><td class="v">${esc(val("controller_model"))}</td><td class="k">NEMA Enclosure</td><td class="v">${esc(val("nema_enclosure"))}</td></tr>
       <tr><td class="k">Controller Serial #</td><td class="v">${esc(val("controller_serial"))}</td><td class="k"># Transfers</td><td class="v">${esc(val("num_transfers"))}</td></tr>
       <tr><td class="k">Transition Type</td><td class="v" colspan="3">${esc(val("transition_type"))}</td></tr>
-    </table>
+    </table>` },
 
+    { key: "isolation", html: `
     <h2 class="sect">ISOLATION / OVERCURRENT PROTECTION</h2>
     <b>Source 1:</b> Device: ${esc(val("iso_s1_device"))||"&mdash;"} &nbsp; Make/Model: ${esc(val("iso_s1_makemodel"))||"&mdash;"} &nbsp; Location: ${esc(val("iso_s1_location"))||"&mdash;"}
     ${printRatingFields("iso_s1")}
     <b>Source 2:</b> Device: ${esc(val("iso_s2_device"))||"&mdash;"} &nbsp; Make/Model: ${esc(val("iso_s2_makemodel"))||"&mdash;"} &nbsp; Location: ${esc(val("iso_s2_location"))||"&mdash;"}
-    ${printRatingFields("iso_s2")}
+    ${printRatingFields("iso_s2")}` },
 
+    { key: "system_config", html: `
     <h2 class="sect">CONTROLLER SETTINGS — SYSTEM CONFIGURATION</h2>
-    ${printPairedRows(SYSTEM_CONFIG_ITEMS, "sysconf")}
+    ${printPairedRows(SYSTEM_CONFIG_ITEMS, "sysconf")}` },
 
+    { key: "source1_protection", html: `
     <h2 class="sect">CONTROLLER SETTINGS — SOURCE 1 PROTECTION</h2>
-    ${printPairedRows(SOURCE_PROTECTION_ITEMS, "src1prot")}
+    ${printPairedRows(SOURCE_PROTECTION_ITEMS, "src1prot")}` },
 
+    { key: "source2_protection", html: `
     <h2 class="sect">CONTROLLER SETTINGS — SOURCE 2 PROTECTION</h2>
-    ${printPairedRows(SOURCE_PROTECTION_ITEMS, "src2prot")}
+    ${printPairedRows(SOURCE_PROTECTION_ITEMS, "src2prot")}` },
 
+    { key: "engine_control", html: `
     <h2 class="sect">ENGINE CONTROL LOGIC</h2>
-    ${printPairedRows(ENGINE_CONTROL_ITEMS, "engctrl")}
+    ${printPairedRows(ENGINE_CONTROL_ITEMS, "engctrl")}` },
 
+    { key: "mechanism_logic", html: `
     <h2 class="sect">MECHANISM LOGIC</h2>
-    ${printPairedRows(MECHANISM_LOGIC_ITEMS, "mechlogic")}
+    ${printPairedRows(MECHANISM_LOGIC_ITEMS, "mechlogic")}` },
 
+    { key: "field_inspection", html: `
     <h2 class="sect">FIELD INSPECTION CHECKLIST</h2>
-    ${printStatusRows(FIELD_INSPECTION_ITEMS, "fieldinsp")}
+    ${printStatusRows(FIELD_INSPECTION_ITEMS, "fieldinsp")}` },
 
+    { key: "voltage_readings", html: `
     <h2 class="sect">LINE / PHASE VOLTAGE READINGS</h2>
-    ${printGrid(SOURCE_ROWS, VOLTAGE_COLS, "volt")}
+    ${printGrid(SOURCE_ROWS, VOLTAGE_COLS, "volt")}` },
 
+    { key: "amperage_readings", html: `
     <h2 class="sect">LINE AMPERAGE READINGS</h2>
-    ${printGrid(SOURCE_ROWS, ABCN_COLS, "amp")}
+    ${printGrid(SOURCE_ROWS, ABCN_COLS, "amp")}` },
 
+    { key: "millivolt_readings", html: `
     <h2 class="sect">MILLI-VOLT READINGS</h2>
-    ${printGrid(SOURCE_ROWS, ABCN_COLS, "mv")}
+    ${printGrid(SOURCE_ROWS, ABCN_COLS, "mv")}` },
 
+    { key: "dlro_readings", html: `
     <h2 class="sect">DLRO READINGS (Scale: ${esc(val("dlro_current_scale"))||"&mdash;"})</h2>
-    ${printGrid(SOURCE_ROWS, ABCN_COLS, "dlro")}
+    ${printGrid(SOURCE_ROWS, ABCN_COLS, "dlro")}` },
 
+    { key: "insulation_readings", html: `
     <h2 class="sect">INSULATION RESISTANCE READINGS</h2>
     <p><b>Test Voltage:</b> ${esc(val("insul_test_voltage")) || "&mdash;"}</p>
     <b>Source 1 (Scale: ${esc(val("insul_s1_scale"))||"&mdash;"})</b>
     ${printGrid([{key:"reading",label:"Reading"}], INSULATION_COLS, "insul_s1")}
     <b>Source 2 (Scale: ${esc(val("insul_s2_scale"))||"&mdash;"})</b>
-    ${printGrid([{key:"reading",label:"Reading"}], INSULATION_COLS, "insul_s2")}
+    ${printGrid([{key:"reading",label:"Reading"}], INSULATION_COLS, "insul_s2")}` },
 
+    { key: "thermography", html: `
     <h2 class="sect">THERMOGRAPHY &amp; TRANSFER TEST</h2>
     <table class="kv">
       <tr><td class="k">Conducted Thermography Survey</td><td class="v">${esc(val("thermography_survey"))}</td>
           <td class="k">Conducted Transfer Test</td><td class="v">${esc(val("transfer_test"))}</td></tr>
       <tr><td class="k">Environmental Conditions</td><td class="v" colspan="3">${esc(val("environmental_conditions"))}</td></tr>
     </table>
-    <p><b>Comments:</b> ${esc(val("comments")) || "&mdash;"}</p>
+    <p><b>Comments:</b> ${esc(val("comments")) || "&mdash;"}</p>` },
 
+    { key: "test_equipment", html: `
     <h2 class="sect">TEST EQUIPMENT</h2>
     <table class="datagrid">
       <tr><th>Equipment</th><th>Make/Model</th><th>Serial #</th><th>Last Calibrated</th></tr>
       ${r.testEquipment.map(it=>`<tr><td>${esc(upper(it.type))||"&mdash;"}</td><td>${esc(upper(it.makeModel))||"&mdash;"}</td><td>${esc(upper(it.serial))||"&mdash;"}</td><td>${esc(it.calibrated)||"&mdash;"}</td></tr>`).join("")}
-    </table>
+    </table>` },
 
+    { key: "overall_results", html: `
     <h2 class="sect">OVERALL INSPECTION RESULTS</h2>
     <table class="kv">
       <tr><td class="k">Result</td><td class="v" style="font-weight:bold; ${val("overall_result")==="PASS"?"color:#2e7d32;":val("overall_result")==="FAIL"?"color:#c0392b;":""}" colspan="3">${esc(val("overall_result")) || "&mdash;"}</td></tr>
     </table>
-    <p><b>Notes:</b> ${esc(val("overall_result_notes")) || "&mdash;"}</p>
+    <p><b>Notes:</b> ${esc(val("overall_result_notes")) || "&mdash;"}</p>` },
 
+    { key: "sign_off", html: `
     <h2 class="sect">SIGN-OFF</h2>
     <table class="kv">
       <tr><td class="k">Tested By</td><td class="v">${esc(val("tested_by_name"))}</td><td class="k">Date</td><td class="v">${esc(val("tested_by_date"))}</td></tr>
       <tr><td class="k">Work Accepted By</td><td class="v">${esc(val("accepted_by_name"))}</td><td class="k">Date</td><td class="v">${esc(val("accepted_by_date"))}</td></tr>
-    </table>
+    </table>` },
 
+    { key: "photo_documentation", html: `
     <h2 class="sect">PHOTO DOCUMENTATION</h2>
     ${r.photoSections.map((s,i)=>`
       <p class="photo-entry-label"><b>Photo Entry ${i+1}${s.label ? ": " + esc(upper(s.label)) : ""}</b></p>
       ${s.notes ? `<p>${esc(upper(s.notes))}</p>` : ""}
       ${s.photos.length ? `<div class="pi-photos">${s.photos.map(p=>`<div class="photo-frame"><img src="${p}"></div>`).join("")}</div>` : "<p><i>No photos attached</i></p>"}
-    `).join("")}
-  `;
+    `).join("")}` },
+  ];
+
+  const html = headerHtml + sectionsHtml
+    .filter(sec => !isSectionCollapsed(sec.key))
+    .map(sec => sec.html)
+    .join("\n");
   document.getElementById("printArea").innerHTML = html;
 }
 
